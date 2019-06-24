@@ -10,9 +10,15 @@ local soundBackground = '/assets/sounds/background.mp3'
 local gameDaySoundBackground = '/assets/sounds/gameDayBackground.mp3'
 local gameNightSoundBackground = '/assets/sounds/gameNightBackground.mp3'
 local actionSound = '/assets/sounds/action.mp3'
+local changePokemonSound = '/assets/sounds/ditto.mp3'
+local saveGameSound = '/assets/sounds/saveGame.mp3'
+local isSickSound = '/assets/sounds/sick.mp3'
+local recoverySound = '/assets/sounds/recovery.mp3'
 local songPlaying = 'backgroundSong'
 
 local timer = 0
+local timerUpdate = 0
+local timerSickness = 0
 
 nameNewPokemon = ''
 
@@ -21,6 +27,8 @@ local gameState = 'mainPage'
 function love.load()
     cursor = love.mouse.getSystemCursor('hand')
     game = game:new()
+
+    math.randomseed(os.time())
 
     -- Song
     sourceAudio = love.audio.newSource(love.sound.newSoundData(soundBackground))
@@ -43,12 +51,18 @@ function love.load()
             game.pokemons[indexPokemon]:updateStats()
             indexPokemon = indexPokemon + 1
         end
+        love.filesystem.write('data.lua', game:saveInFile())
     end
 end
 
 function love.update( dt )
     timer = timer + dt
+    timerUpdate = timerUpdate + dt
+    timerSickness = timerSickness + dt
+
     changeMainBackground(dt)
+    updateFilesAndStats(dt)
+    verifySickness(dt)
 end
 
 function love.draw()
@@ -57,7 +71,7 @@ function love.draw()
     elseif gameState == 'pokemonSettings' then drawPokemonSettings()
     elseif gameState == 'createNewPokemon' then drawCreateNewPokemon()
     elseif gameState == 'gameMainPage' then drawGameMainPage()
-	else error('gameState is not a valid state.') end
+    else error('gameState is not a valid state.') end
 end
 
 function drawMainPage()
@@ -343,6 +357,9 @@ function drawGameMainPage()
         love.graphics.draw(gameDayBackground, x, y)
     end
 
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.setNewFont(pixelFont, 20)
+
     local x, y = love.mouse.getPosition()
 
     -- Change Song
@@ -366,6 +383,9 @@ function drawGameMainPage()
     fwBack = f:getWidth('BACK')
     fhBack = f:getHeight()
 
+    -- Change Pokemon
+    love.graphics.draw(love.graphics.newImage('assets/items/master-ball.png'), love.graphics.getWidth() - 60, love.graphics.getHeight() - 60, 0, 1.5, 1.5)
+
     -- Pokémon
     local pokemonImage = '/assets/pokemons/'
 
@@ -373,6 +393,86 @@ function drawGameMainPage()
     if currentPokemon:isSick() then pokemonImage = pokemonImage .. '/sick/' end
     
     love.graphics.draw(love.graphics.newImage(pokemonImage .. currentPokemon.image), love.graphics.getWidth()/2 - 30, love.graphics.getHeight() - 180, 0, 1.9, 1.9)
+
+    -- Stats
+    love.graphics.setNewFont(pixelFont, 14)
+    local f = love.graphics.getFont()
+    fhStats = f:getHeight()
+
+    -- Happiness Stats
+    love.graphics.setColor(1, 1, 1)
+    fwStats = f:getWidth('Happiness (' .. math.floor(currentPokemon.happiness) .. '%)')
+
+    love.graphics.print('Happiness (' .. math.floor(currentPokemon.happiness) .. '%)', love.graphics.getWidth() - fwStats - 20, 10)
+    love.graphics.rectangle("line", love.graphics.getWidth() - 220, fhStats + 10, 200, 10, 5, 5)
+
+    stats = currentPokemon.happiness * 2
+    if stats == 0 then stats = 10 end
+    if stats <= 50 then love.graphics.setColor(0.960784314, 0.231372549, 0.341176471)
+    elseif stats <= 140 then love.graphics.setColor(1, 0.658823529, 0.00392156863)
+    else love.graphics.setColor(0.0196078431, 0.768627451, 0.419607843) end
+
+    love.graphics.rectangle("fill", love.graphics.getWidth() - 220, fhStats + 10, stats, 10, 5)
+
+    -- Energy Stats
+    love.graphics.setColor(1, 1, 1)
+    fwStats = f:getWidth('Energy (' .. math.floor(currentPokemon.energy) .. '%)')
+
+    love.graphics.print('Energy (' .. math.floor(currentPokemon.energy) .. '%)', love.graphics.getWidth() - fwStats - 20, 60)
+    love.graphics.rectangle("line", love.graphics.getWidth() - 220, fhStats + 60, 200, 10, 5, 5)
+
+    stats = currentPokemon.energy * 2
+    if stats == 0 then stats = 10 end
+    if stats <= 50 then love.graphics.setColor(0.960784314, 0.231372549, 0.341176471)
+    elseif stats <= 140 then love.graphics.setColor(1, 0.658823529, 0.00392156863)
+    else love.graphics.setColor(0.0196078431, 0.768627451, 0.419607843) end
+
+    love.graphics.rectangle("fill", love.graphics.getWidth() - 220, fhStats + 60, stats, 10, 5)
+
+    -- Healthy Stats
+    love.graphics.setColor(1, 1, 1)
+    fwStats = f:getWidth('Healthy (' .. math.floor(currentPokemon.healthiness) .. '%)')
+
+    love.graphics.print('Healthy (' .. math.floor(currentPokemon.healthiness) .. '%)', love.graphics.getWidth() - fwStats - 20, 110)
+    love.graphics.rectangle("line", love.graphics.getWidth() - 220, fhStats + 110, 200, 10, 5, 5)
+
+    stats = currentPokemon.healthiness * 2
+    if stats == 0 then stats = 10 end
+    if stats <= 50 then love.graphics.setColor(0.960784314, 0.231372549, 0.341176471)
+    elseif stats <= 140 then love.graphics.setColor(1, 0.658823529, 0.00392156863)
+    else love.graphics.setColor(0.0196078431, 0.768627451, 0.419607843) end
+
+    love.graphics.rectangle("fill", love.graphics.getWidth() - 220, fhStats + 110, stats, 10, 5)
+
+    -- Dirty Stats
+    love.graphics.setColor(1, 1, 1)
+    fwStats = f:getWidth('Clean (' .. 100 - math.floor(currentPokemon.dirt) .. '%)')
+
+    love.graphics.print('Clean (' .. 100 - math.floor(currentPokemon.dirt) .. '%)', love.graphics.getWidth() - fwStats - 20, 160)
+    love.graphics.rectangle("line", love.graphics.getWidth() - 220, fhStats + 160, 200, 10, 5, 5)
+
+    stats = 200 - currentPokemon.dirt * 2
+    if stats == 0 then stats = 10 end
+    if stats <= 50 then love.graphics.setColor(0.960784314, 0.231372549, 0.341176471)
+    elseif stats <= 140 then love.graphics.setColor(1, 0.658823529, 0.00392156863)
+    else love.graphics.setColor(0.0196078431, 0.768627451, 0.419607843) end
+
+    love.graphics.rectangle("fill", love.graphics.getWidth() - 220, fhStats + 160, stats, 10, 5)
+
+    -- Hunger Stats
+    love.graphics.setColor(1, 1, 1)
+    fwStats = f:getWidth('Pleased (' .. 100 - math.floor(currentPokemon.hunger) .. '%)')
+
+    love.graphics.print('Pleased (' .. 100 -math.floor(currentPokemon.hunger) .. '%)', love.graphics.getWidth() - fwStats - 20, 210)
+    love.graphics.rectangle("line", love.graphics.getWidth() - 220, fhStats + 210, 200, 10, 5, 5)
+
+    stats = 200 - currentPokemon.hunger * 2
+    if stats == 0 then stats = 10 end
+    if stats <= 50 then love.graphics.setColor(0.960784314, 0.231372549, 0.341176471)
+    elseif stats <= 140 then love.graphics.setColor(1, 0.658823529, 0.00392156863)
+    else love.graphics.setColor(0.0196078431, 0.768627451, 0.419607843) end
+
+    love.graphics.rectangle("fill", love.graphics.getWidth() - 220, fhStats + 210, stats, 10, 5)
 
     -- Function when click in anypoint
     function love.mousepressed( z, y, button )
@@ -387,6 +487,12 @@ function drawGameMainPage()
                 songPlaying = 'backgroundSong'
 
                 gameState = 'choosePokemon'
+            elseif y >= love.graphics.getHeight() - 60 and y <= love.graphics.getHeight() - 60 + 45 and x >= love.graphics.getWidth() - 60 and x <= love.graphics.getWidth() - 60 + 45 then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(changePokemonSound)))
+
+                local newPokemon = math.random(1, 649)
+                currentPokemon:setImage(newPokemon .. '.png')
+                love.filesystem.write('data.lua', game:saveInFile())
             end
         end
     end
@@ -394,9 +500,28 @@ function drawGameMainPage()
     -- Change Mouse Cursor
     if y >= 10 and y <= 10 + fhBack and x >= 10 and x <= 10 + fwBack then
         love.mouse.setCursor(cursor)
+    elseif y >= love.graphics.getHeight() - 60 and y <= love.graphics.getHeight() - 60 + 45 and x >= love.graphics.getWidth() - 60 and x <= love.graphics.getWidth() - 60 + 45 then
+        love.mouse.setCursor(cursor)
     else love.mouse.setCursor() end
 end
 
 function changeMainBackground( dt )
     mainBackground = love.graphics.newImage('/assets/background/' .. tonumber(string.format('%.0f', timer)) % 20 + 1 .. '.png')
+end
+
+function updateFilesAndStats( dt )
+    if game.currentPokemon and tonumber(string.format('%.0f', timerUpdate)) % 11 == 10 then
+        love.audio.play(love.audio.newSource(love.sound.newSoundData(saveGameSound)))
+        print('updating...')
+        game.pokemons[game.currentPokemon]:updateStats()
+        love.filesystem.write('data.lua', game:saveInFile())
+        timerUpdate = 0
+    end
+end
+
+function verifySickness( dt )
+    if game.currentPokemon and gameState == 'gameMainPage' and tonumber(string.format('%.0f', timerSickness)) % 6 == 5 then
+        if game.pokemons[game.currentPokemon]:isSick() then love.audio.play(love.audio.newSource(love.sound.newSoundData(isSickSound))) end
+        timerSickness = 0
+    end
 end

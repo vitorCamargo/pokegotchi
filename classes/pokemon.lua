@@ -3,7 +3,7 @@ module(..., package.seeall)
 function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, healthiness, dirt, hunger, sleeping )
     local pokemon = {}
 
-    pokemon.image = image or 'ditto.png'
+    pokemon.image = image or '132.png'
     pokemon.name = name or 'Beneditto'
     pokemon.createdAt = createdAt or os.time()
     pokemon.lastLogTime = lastLogTime or os.time()
@@ -15,6 +15,10 @@ function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, he
     pokemon.hunger = hunger or 0
 
     pokemon.sleeping = sleeping or false
+
+    function pokemon:setImage( image )
+        pokemon.image = image
+    end
 
     function pokemon:setHappiness( happiness )
         if happiness >= 100 then
@@ -84,7 +88,7 @@ function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, he
             pokemon:setDirt(pokemon.dirt + ((math.random(30, 90)/10) * deltaTimeHours))
             pokemon:setHunger(pokemon.hunger + ((math.random(30, 80)/10) * deltaTimeHours))
 
-            if pokemon:isSleeping() then
+            if pokemon:isSleeping() == 'true' then
                 pokemon:setEnergy(pokemon.energy + (8 * deltaTimeHours))
             else
                 pokemon:setEnergy(pokemon.energy - ((math.random(10, 40)/10) * deltaTimeHours))
