@@ -3,7 +3,7 @@ module(..., package.seeall)
 function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, healthiness, dirt, hunger, sleeping )
     local pokemon = {}
 
-    pokemon.image = image or '132.png'
+    pokemon.image = image or 'ditto.png'
     pokemon.name = name or 'Beneditto'
     pokemon.createdAt = createdAt or os.time()
     pokemon.lastLogTime = lastLogTime or os.time()
@@ -111,7 +111,7 @@ function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, he
     end
 
     function pokemon:isSleeping()
-        return pokemon.isSleeping
+        return pokemon.sleeping
     end
 
     function pokemon:isSad()

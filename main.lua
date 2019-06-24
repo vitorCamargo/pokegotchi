@@ -1,10 +1,17 @@
 local game = require('classes/game')
 
 local mainBackground = love.graphics.newImage('/assets/background/1.png')
+local gameDayBackground = love.graphics.newImage('/assets/background/backgroundDayGame.png')
+local gameNightBackground = love.graphics.newImage('/assets/background/backgroundNightGame.png')
 local titleFont = '/assets/fonts/title.ttf'
 local pixelFont = '/assets/fonts/pixel.ttf'
-local backgroundSound = '/assets/sounds/background.mp3'
+
+local soundBackground = '/assets/sounds/background.mp3'
+local gameDaySoundBackground = '/assets/sounds/gameDayBackground.mp3'
+local gameNightSoundBackground = '/assets/sounds/gameNightBackground.mp3'
 local actionSound = '/assets/sounds/action.mp3'
+local songPlaying = 'backgroundSong'
+
 local timer = 0
 
 nameNewPokemon = ''
@@ -16,9 +23,9 @@ function love.load()
     game = game:new()
 
     -- Song
-    souceAudio = love.audio.newSource(love.sound.newSoundData(backgroundSound))
-    souceAudio:setLooping(true)
-    souceAudio:play()
+    sourceAudio = love.audio.newSource(love.sound.newSoundData(soundBackground))
+    sourceAudio:setLooping(true)
+    sourceAudio:play()
 
     if not love.filesystem.getInfo('data.lua') then
         love.filesystem.newFile('data.lua')
@@ -55,16 +62,16 @@ end
 
 function drawMainPage()
     -- Background
-    love.graphics.setColor(255, 255, 255, 255)
+    love.graphics.setColor(1, 1, 1, 1)
     love.graphics.draw(mainBackground, x, y)
 
     -- Title
-    love.graphics.setColor(250, 200, -59)
+    love.graphics.setColor(0.980392157, 0.784313725, 0.231372549)
     love.graphics.setNewFont(titleFont, 50)
     love.graphics.printf('PoKéGotchi', 0, love.graphics.getHeight()/2 - 60, love.graphics.getWidth(), 'center')
 
     -- Subtitle
-    love.graphics.setColor(255, 255, 255)
+    love.graphics.setColor(1, 1, 1)
     love.graphics.setNewFont(pixelFont, 20)
     love.graphics.printf('PRESS ANY KEY..', 0, love.graphics.getHeight()/2 + 80, love.graphics.getWidth(), 'center')
 
@@ -86,18 +93,18 @@ end
 
 function drawChoosePokemon()
     -- Background
-    love.graphics.setColor(255, 255, 255, 255)
+    love.graphics.setColor(1, 1, 1, 1)
     love.graphics.draw(mainBackground, x, y)
 
     local x, y = love.mouse.getPosition()
 
     -- Title
-    love.graphics.setColor(250, 200, -59)
+    love.graphics.setColor(0.980392157, 0.784313725, 0.231372549)
     love.graphics.setNewFont(titleFont, 40)
     love.graphics.printf('PoKéGotchi', 0, 10, love.graphics.getWidth(), 'center')
     
     -- Subtitle
-    love.graphics.setColor(255, 255, 255)
+    love.graphics.setColor(1, 1, 1)
     love.graphics.setNewFont(pixelFont, 20)
     love.graphics.printf('PICK OR ADD ONE POKEMON', 0, 80, love.graphics.getWidth(), 'center')
 
@@ -139,22 +146,24 @@ function drawChoosePokemon()
     
     -- Function to Click in Slots/New Poke
     function love.mousepressed( z, y, button )
-        if table.getn(game.pokemons) < 3 and (y >= love.graphics.getHeight() - 50 and y <= love.graphics.getHeight() - 50 + fhSlotNew) and (x >= (love.graphics.getWidth() - fwSlotNew)/2 and x <= (love.graphics.getWidth() - fwSlotNew)/2 + fwSlotNew) then
-            love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
-            nameNewPokemon = ''
-            gameState = 'createNewPokemon'
-        elseif table.getn(game.pokemons) >= 1 and (y >= love.graphics.getHeight()/2 - 50 and y <= love.graphics.getHeight()/2 - 50 + fhSlot1) and (x >= (love.graphics.getWidth() - fwSlot1)/2 and x <= (love.graphics.getWidth() - fwSlot1)/2 + fwSlot1) then
-            love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
-            game:setCurrentPokemon(1)
-            gameState = 'pokemonSettings'
-        elseif table.getn(game.pokemons) >= 2 and (y >= love.graphics.getHeight()/2 - 10 and y <= love.graphics.getHeight()/2 - 10 + fhSlot2) and (x >= (love.graphics.getWidth() - fwSlot2)/2 and x <= (love.graphics.getWidth() - fwSlot2)/2 + fwSlot2) then
-            love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
-            game:setCurrentPokemon(2)
-            gameState = 'pokemonSettings'
-        elseif table.getn(game.pokemons) >= 3 and (y >= love.graphics.getHeight()/2 + 30 and y <= love.graphics.getHeight()/2 + 30 + fhSlot3) and (x >= (love.graphics.getWidth() - fwSlot3)/2 and x <= (love.graphics.getWidth() - fwSlot3)/2 + fwSlot3) then
-            love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
-            game:setCurrentPokemon(3)
-            gameState = 'pokemonSettings'
+        if gameState == 'choosePokemon' then
+            if table.getn(game.pokemons) < 3 and (y >= love.graphics.getHeight() - 50 and y <= love.graphics.getHeight() - 50 + fhSlotNew) and (x >= (love.graphics.getWidth() - fwSlotNew)/2 and x <= (love.graphics.getWidth() - fwSlotNew)/2 + fwSlotNew) then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+                nameNewPokemon = ''
+                gameState = 'createNewPokemon'
+            elseif table.getn(game.pokemons) >= 1 and (y >= love.graphics.getHeight()/2 - 50 and y <= love.graphics.getHeight()/2 - 50 + fhSlot1) and (x >= (love.graphics.getWidth() - fwSlot1)/2 and x <= (love.graphics.getWidth() - fwSlot1)/2 + fwSlot1) then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+                game:setCurrentPokemon(1)
+                gameState = 'pokemonSettings'
+            elseif table.getn(game.pokemons) >= 2 and (y >= love.graphics.getHeight()/2 - 10 and y <= love.graphics.getHeight()/2 - 10 + fhSlot2) and (x >= (love.graphics.getWidth() - fwSlot2)/2 and x <= (love.graphics.getWidth() - fwSlot2)/2 + fwSlot2) then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+                game:setCurrentPokemon(2)
+                gameState = 'pokemonSettings'
+            elseif table.getn(game.pokemons) >= 3 and (y >= love.graphics.getHeight()/2 + 30 and y <= love.graphics.getHeight()/2 + 30 + fhSlot3) and (x >= (love.graphics.getWidth() - fwSlot3)/2 and x <= (love.graphics.getWidth() - fwSlot3)/2 + fwSlot3) then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+                game:setCurrentPokemon(3)
+                gameState = 'pokemonSettings'
+            end
         end
     end
 
@@ -172,18 +181,18 @@ end
 
 function drawPokemonSettings()
     -- Background
-    love.graphics.setColor(255, 255, 255, 255)
+    love.graphics.setColor(1, 1, 1, 1)
     love.graphics.draw(mainBackground, x, y)
 
     local x, y = love.mouse.getPosition()
 
     -- Title
-    love.graphics.setColor(250, 200, -59)
+    love.graphics.setColor(0.980392157, 0.784313725, 0.231372549)
     love.graphics.setNewFont(titleFont, 40)
     love.graphics.printf('PoKéGotchi', 0, 10, love.graphics.getWidth(), 'center')
     
     -- Subtitle (Name of Pokemon)
-    love.graphics.setColor(255, 255, 255)
+    love.graphics.setColor(1, 1, 1)
     love.graphics.setNewFont(pixelFont, 20)
     love.graphics.print(game:getCurrentPokemon().name, 10, 130)
 
@@ -210,18 +219,20 @@ function drawPokemonSettings()
     
     -- Function to Click in Slots/New Poke
     function love.mousepressed( z, y, button )
-        if y >= 200 and y <= 200 + fhLoad and x >= 40 and x <= 40 + fwLoad then
-            love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
-            gameState = 'gameMainPage'
-        elseif y >= 240 and y <= 240 + fhDelete and x >= 40 and x <= 40 + fwDelete then
-            game:removePokemon(game.currentPokemon)
-            love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
-            love.filesystem.write('data.lua', game:saveInFile())
+        if gameState == 'pokemonSettings' then
+            if y >= 200 and y <= 200 + fhLoad and x >= 40 and x <= 40 + fwLoad then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+                gameState = 'gameMainPage'
+            elseif y >= 240 and y <= 240 + fhDelete and x >= 40 and x <= 40 + fwDelete then
+                game:removePokemon(game.currentPokemon)
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+                love.filesystem.write('data.lua', game:saveInFile())
 
-            gameState = 'choosePokemon'
-        elseif y >= 280 and y <= 280 + fhBack and x >= 40 and x <= 40 + fwBack then
-            love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
-            gameState = 'choosePokemon'
+                gameState = 'choosePokemon'
+            elseif y >= 280 and y <= 280 + fhBack and x >= 40 and x <= 40 + fwBack then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+                gameState = 'choosePokemon'
+            end
         end
     end
 
@@ -237,18 +248,18 @@ end
 
 function drawCreateNewPokemon()
     -- Background
-    love.graphics.setColor(255, 255, 255, 255)
+    love.graphics.setColor(1, 1, 1, 1)
     love.graphics.draw(mainBackground, x, y)
 
     local x, y = love.mouse.getPosition()
 
     -- Title
-    love.graphics.setColor(250, 200, -59)
+    love.graphics.setColor(0.980392157, 0.784313725, 0.231372549)
     love.graphics.setNewFont(titleFont, 40)
     love.graphics.printf('PoKéGotchi', 0, 10, love.graphics.getWidth(), 'center')
     
     -- Subtitle (Name of Pokemon)
-    love.graphics.setColor(255, 255, 255)
+    love.graphics.setColor(1, 1, 1)
     love.graphics.setNewFont(pixelFont, 20)
     love.graphics.print('TYPE THE NAME OF', 10, 100)
     love.graphics.print('YOUR NEW POKÉ', 10, 125)    
@@ -274,17 +285,19 @@ function drawCreateNewPokemon()
     
     -- Function to Click in Slots/New Poke
     function love.mousepressed( z, y, button )
-        if y >= love.graphics.getHeight() - 30 and y <= love.graphics.getHeight() - 30 + fhBack and x >= 40 and x <= 40 + fwBack then
-            love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
-            gameState = 'choosePokemon'
-        elseif nameNewPokemon ~= nil and nameNewPokemon ~= '' and y >= love.graphics.getHeight() - 30 and y <= love.graphics.getHeight() - 30 + fhCreate and x >= love.graphics.getWidth() - fwCreate - 40 and x <= love.graphics.getWidth() - fwCreate - 40 + fwCreate then
-            love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+        if gameState == 'createNewPokemon' then
+            if y >= love.graphics.getHeight() - 30 and y <= love.graphics.getHeight() - 30 + fhBack and x >= 40 and x <= 40 + fwBack then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+                gameState = 'choosePokemon'
+            elseif nameNewPokemon ~= nil and nameNewPokemon ~= '' and y >= love.graphics.getHeight() - 30 and y <= love.graphics.getHeight() - 30 + fhCreate and x >= love.graphics.getWidth() - fwCreate - 40 and x <= love.graphics.getWidth() - fwCreate - 40 + fwCreate then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
 
-            game:addPokemon(nameNewPokemon)
-            game:setCurrentPokemon(table.getn(game.pokemons))
-            love.filesystem.write('data.lua', game:saveInFile())
+                game:addPokemon(nameNewPokemon)
+                game:setCurrentPokemon(table.getn(game.pokemons))
+                love.filesystem.write('data.lua', game:saveInFile())
 
-            gameState = "gameMainPage"
+                gameState = "gameMainPage"
+            end
         end
     end
 
@@ -297,26 +310,91 @@ function drawCreateNewPokemon()
     
     -- Get the name of new Pokémon
     function love.textinput( t )
-        nameNewPokemon = nameNewPokemon .. t
+        if gameState == 'createNewPokemon' then
+            nameNewPokemon = nameNewPokemon .. t
+        end
     end
 
     function love.keypressed( key )
-        if key == 'backspace' then
-            nameNewPokemon = nameNewPokemon:sub(1, -2)
-        elseif key == 'return' and nameNewPokemon ~= nil and nameNewPokemon ~= '' then
-            love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+        if gameState == 'createNewPokemon' then
+            if key == 'backspace' then
+                nameNewPokemon = nameNewPokemon:sub(1, -2)
+            elseif key == 'return' and nameNewPokemon ~= nil and nameNewPokemon ~= '' then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
 
-            game:addPokemon(nameNewPokemon)
-            game:setCurrentPokemon(table.getn(game.pokemons))
-            love.filesystem.write('data.lua', game:saveInFile())
+                game:addPokemon(nameNewPokemon)
+                game:setCurrentPokemon(table.getn(game.pokemons))
+                love.filesystem.write('data.lua', game:saveInFile())
 
-            gameState = "gameMainPage"
+                gameState = "gameMainPage"
+            end
         end
-     end
+    end
 end
 
 function drawGameMainPage()
+    local currentPokemon = game:getCurrentPokemon()
 
+    -- Background
+    love.graphics.setColor(1, 1, 1, 1)
+    if currentPokemon:isSleeping() == 'true' then
+        love.graphics.draw(gameNightBackground, x, y)
+    else
+        love.graphics.draw(gameDayBackground, x, y)
+    end
+
+    local x, y = love.mouse.getPosition()
+
+    -- Change Song
+    if songPlaying == 'backgroundSong' or (songPlaying == 'gameDaySongBackground' and currentPokemon:isSleeping() == 'true') or (songPlaying == 'gameNightSongBackground' and currentPokemon:isSleeping() == 'false') then
+        sourceAudio:stop()
+        if currentPokemon:isSleeping() == 'true' then
+            sourceAudio = love.audio.newSource(love.sound.newSoundData(gameNightSoundBackground))
+            songPlaying = 'gameNightSongBackground'
+        else
+            sourceAudio = love.audio.newSource(love.sound.newSoundData(gameDaySoundBackground))
+            songPlaying = 'gameDaySongBackground'
+        end
+        sourceAudio:setLooping(true)
+        sourceAudio:play()
+    end
+
+    -- Back to Menu
+    love.graphics.print('BACK', 10, 10)
+
+    local f = love.graphics.getFont()
+    fwBack = f:getWidth('BACK')
+    fhBack = f:getHeight()
+
+    -- Pokémon
+    local pokemonImage = '/assets/pokemons/'
+
+    if currentPokemon:isSleeping() == 'true' then pokemonImage = pokemonImage .. '/sleeping/' end
+    if currentPokemon:isSick() then pokemonImage = pokemonImage .. '/sick/' end
+    
+    love.graphics.draw(love.graphics.newImage(pokemonImage .. currentPokemon.image), love.graphics.getWidth()/2 - 30, love.graphics.getHeight() - 180, 0, 1.9, 1.9)
+
+    -- Function when click in anypoint
+    function love.mousepressed( z, y, button )
+        if gameState == 'gameMainPage' then
+            if y >= 10 and y <= 10 + fhBack and x >= 10 and x <= 10 + fwBack then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+
+                sourceAudio:stop()
+                sourceAudio = love.audio.newSource(love.sound.newSoundData(soundBackground))
+                sourceAudio:setLooping(true)
+                sourceAudio:play()
+                songPlaying = 'backgroundSong'
+
+                gameState = 'choosePokemon'
+            end
+        end
+    end
+
+    -- Change Mouse Cursor
+    if y >= 10 and y <= 10 + fhBack and x >= 10 and x <= 10 + fwBack then
+        love.mouse.setCursor(cursor)
+    else love.mouse.setCursor() end
 end
 
 function changeMainBackground( dt )
