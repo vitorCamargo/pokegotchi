@@ -1,6 +1,6 @@
 module(..., package.seeall)
 
-function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, healthiness, dirt, hunger, sleeping )
+function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, healthiness, dirt, hunger, sleeping, foods, medicines )
     local pokemon = {}
 
     pokemon.image = image or '132.png'
@@ -13,8 +13,25 @@ function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, he
     pokemon.healthiness = healthiness or 100
     pokemon.dirt = dirt or 0
     pokemon.hunger = hunger or 0
+    
+    pokemon.foods = foods or 20
+    pokemon.medicines = medicines or 20
 
     pokemon.sleeping = sleeping or false
+
+    function pokemon:eat()
+        pokemon.foods = pokemon.foods - 1
+        pokemon:setHunger(pokemon.hunger - 10)
+    end
+
+    function pokemon:takeMedicine()
+        pokemon.medicines = pokemon.medicines - 1
+        pokemon:setHealthiness(pokemon.healthiness + 10)
+    end
+
+    function pokemon:takeBath()
+        pokemon:setDirt(pokemon.dirt - 10)
+    end
 
     function pokemon:setImage( image )
         pokemon.image = image
@@ -111,7 +128,7 @@ function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, he
     end
 
     function pokemon:saveInFile()
-        return pokemon.name .. ';' .. pokemon.image .. ';' .. pokemon.createdAt .. ';' .. pokemon.lastLogTime .. ';' .. pokemon.happiness .. ';' .. pokemon.energy .. ';' .. pokemon.healthiness .. ';' .. pokemon.dirt .. ';' .. pokemon.hunger .. ';' .. string.format('%s', tostring(pokemon.sleeping)) .. ';'
+        return pokemon.name .. ';' .. pokemon.image .. ';' .. pokemon.createdAt .. ';' .. pokemon.lastLogTime .. ';' .. pokemon.happiness .. ';' .. pokemon.energy .. ';' .. pokemon.healthiness .. ';' .. pokemon.dirt .. ';' .. pokemon.hunger .. ';' .. string.format('%s', tostring(pokemon.sleeping)) .. ';' .. pokemon.foods .. ';' .. pokemon.medicines .. ';'
     end
 
     function pokemon:isSleeping()

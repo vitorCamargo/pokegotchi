@@ -16,8 +16,8 @@ function new()
         end
     end
 
-    function game:addPokemon( name, image, createdAt, lastLogTime, happiness, energy, healthiness, dirt, hunger, sleeping )
-        game.pokemons[table.getn(game.pokemons) + 1] = pokemon.new('', name, image, createdAt, lastLogTime, happiness, energy, healthiness, dirt, hunger, sleeping)
+    function game:addPokemon( name, image, createdAt, lastLogTime, happiness, energy, healthiness, dirt, hunger, sleeping, foods, medicines )
+        game.pokemons[table.getn(game.pokemons) + 1] = pokemon.new('', name, image, createdAt, lastLogTime, happiness, energy, healthiness, dirt, hunger, sleeping, foods, medicines)
     end
 
     function game:removePokemon( index )
