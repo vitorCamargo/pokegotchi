@@ -383,8 +383,15 @@ function drawGameMainPage()
     fwBack = f:getWidth('BACK')
     fhBack = f:getHeight()
 
+    -- Menu
+    love.graphics.draw(love.graphics.newImage('assets/items/play.png'), 5, love.graphics.getHeight()/2 - 130, 0, 1.3, 1.3)
+    love.graphics.draw(love.graphics.newImage('assets/items/food.png'), 5, love.graphics.getHeight()/2 - 90, 0, 1.3, 1.3)
+    love.graphics.draw(love.graphics.newImage('assets/items/clean.png'), 8, love.graphics.getHeight()/2 - 45, 0, 1.3, 1.3)
+    love.graphics.draw(love.graphics.newImage('assets/items/medicine.png'), 5, love.graphics.getHeight()/2, 0, 1.3, 1.3)
+    love.graphics.draw(love.graphics.newImage('assets/items/sleep.png'), 8, love.graphics.getHeight()/2 + 50, 0, 1.3, 1.3)
+
     -- Change Pokemon
-    love.graphics.draw(love.graphics.newImage('assets/items/master-ball.png'), love.graphics.getWidth() - 60, love.graphics.getHeight() - 60, 0, 1.5, 1.5)
+    love.graphics.draw(love.graphics.newImage('assets/items/master-ball.png'), love.graphics.getWidth() - 50, love.graphics.getHeight() - 50, 0, 1.5, 1.5)
 
     -- Pokémon
     local pokemonImage = '/assets/pokemons/'
@@ -493,6 +500,17 @@ function drawGameMainPage()
                 local newPokemon = math.random(1, 649)
                 currentPokemon:setImage(newPokemon .. '.png')
                 love.filesystem.write('data.lua', game:saveInFile())
+            elseif x >= 5 and x <= 35 and y >= love.graphics.getHeight()/2 - 130 and y <= love.graphics.getHeight()/2 - 100 then
+                -- Play
+            elseif x >= 5 and x <= 35 and y >= love.graphics.getHeight()/2 - 90 and y <= love.graphics.getHeight()/2 - 60 + 45 then
+                -- Food
+            elseif x >= 8 and x <= 32 and y >= love.graphics.getHeight()/2 - 45 and y <= love.graphics.getHeight()/2 - 21 then
+                -- Clean
+            elseif x >= 5 and x <= 35 and y >= love.graphics.getHeight()/2 and y <= love.graphics.getHeight()/2 + 30 then
+                -- Medicine
+            elseif x >= 8 and x <= 32 and y >= love.graphics.getHeight()/2 + 50 and y <= love.graphics.getHeight()/2 + 80 then
+                if currentPokemon:isSleeping() == 'true' then currentPokemon:setSleeping('false')
+                else currentPokemon:setSleeping('true') end
             end
         end
     end
@@ -501,6 +519,16 @@ function drawGameMainPage()
     if y >= 10 and y <= 10 + fhBack and x >= 10 and x <= 10 + fwBack then
         love.mouse.setCursor(cursor)
     elseif y >= love.graphics.getHeight() - 60 and y <= love.graphics.getHeight() - 60 + 45 and x >= love.graphics.getWidth() - 60 and x <= love.graphics.getWidth() - 60 + 45 then
+        love.mouse.setCursor(cursor)
+    elseif x >= 5 and x <= 35 and y >= love.graphics.getHeight()/2 - 130 and y <= love.graphics.getHeight()/2 - 100 then
+        love.mouse.setCursor(cursor)
+    elseif x >= 5 and x <= 35 and y >= love.graphics.getHeight()/2 - 90 and y <= love.graphics.getHeight()/2 - 60 + 45 then
+        love.mouse.setCursor(cursor)
+    elseif x >= 8 and x <= 32 and y >= love.graphics.getHeight()/2 - 45 and y <= love.graphics.getHeight()/2 - 21 then
+        love.mouse.setCursor(cursor)
+    elseif x >= 5 and x <= 35 and y >= love.graphics.getHeight()/2 and y <= love.graphics.getHeight()/2 + 30 then
+        love.mouse.setCursor(cursor)
+    elseif x >= 8 and x <= 32 and y >= love.graphics.getHeight()/2 + 50 and y <= love.graphics.getHeight()/2 + 80 then
         love.mouse.setCursor(cursor)
     else love.mouse.setCursor() end
 end

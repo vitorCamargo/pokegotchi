@@ -70,7 +70,7 @@ function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, he
         end
     end
 
-    function pokemon:setSlepping( sleeping )
+    function pokemon:setSleeping( sleeping )
         pokemon.sleeping = sleeping
     end
 
