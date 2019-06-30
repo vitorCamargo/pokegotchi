@@ -239,6 +239,7 @@ function drawPokemonSettings()
                 gameState = 'gameMainPage'
             elseif y >= 240 and y <= 240 + fhDelete and x >= 40 and x <= 40 + fwDelete then
                 game:removePokemon(game.currentPokemon)
+                game.currentPokemon = nil
                 love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
                 love.filesystem.write('data.lua', game:saveInFile())
 
