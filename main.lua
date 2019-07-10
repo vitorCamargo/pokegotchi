@@ -22,6 +22,11 @@ local timerSickness = 0
 
 nameNewPokemon = ''
 
+local miniGameResult = nil
+local miniGameRealResult = nil
+
+local textTypeMiniGame = ''
+
 local gameState = 'mainPage'
 
 function love.load()
@@ -71,6 +76,8 @@ function love.draw()
     elseif gameState == 'pokemonSettings' then drawPokemonSettings()
     elseif gameState == 'createNewPokemon' then drawCreateNewPokemon()
     elseif gameState == 'gameMainPage' then drawGameMainPage()
+    elseif gameState == 'miniGamePage' then drawMiniGamePage()
+    elseif gameState == 'resultGameMainPage' then drawResultGameMainPage()
     else error('gameState is not a valid state.') end
 end
 
@@ -200,6 +207,8 @@ function drawPokemonSettings()
 
     local x, y = love.mouse.getPosition()
 
+    local isDead = game:getCurrentPokemon():isDead()
+
     -- Title
     love.graphics.setColor(0.980392157, 0.784313725, 0.231372549)
     love.graphics.setNewFont(titleFont, 40)
@@ -210,12 +219,24 @@ function drawPokemonSettings()
     love.graphics.setNewFont(pixelFont, 20)
     love.graphics.print(game:getCurrentPokemon().name, 10, 130)
 
-    -- Load Game
-    love.graphics.print('LOAD GAME', 40, 200)
 
     local f = love.graphics.getFont()
-    fwLoad = f:getWidth('LOAD GAME')
-    fhLoad = f:getHeight()
+    if isDead then
+
+        love.graphics.printf('YOUR POKÉMON IS DEAD, RESTART THE GAME TO PLAY AGAIN', 0, love.graphics.getHeight() - 60, love.graphics.getWidth(), 'center')        
+
+        -- Load Game
+        love.graphics.print('RESTART GAME', 40, 200)
+
+        fwLoad = f:getWidth('RESTART GAME')
+        fhLoad = f:getHeight()
+    else
+        -- Load Game
+        love.graphics.print('LOAD GAME', 40, 200)
+
+        fwLoad = f:getWidth('LOAD GAME')
+        fhLoad = f:getHeight()
+    end
 
     -- Delete Game
     love.graphics.print('DELETE GAME', 40, 240)
@@ -235,6 +256,11 @@ function drawPokemonSettings()
     function love.mousepressed( z, y, button )
         if gameState == 'pokemonSettings' then
             if y >= 200 and y <= 200 + fhLoad and x >= 40 and x <= 40 + fwLoad then
+                if isDead then
+                    game:getCurrentPokemon():reset()
+                    game:saveInFile()
+                end
+
                 love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
                 gameState = 'gameMainPage'
             elseif y >= 240 and y <= 240 + fhDelete and x >= 40 and x <= 40 + fwDelete then
@@ -530,7 +556,7 @@ function drawGameMainPage()
                 currentPokemon:setImage('132.png')
                 love.filesystem.write('data.lua', game:saveInFile())
             elseif x >= 5 and x <= 35 and y >= love.graphics.getHeight()/2 - 130 and y <= love.graphics.getHeight()/2 - 100 then
-                print('time to play')
+                gameState = 'miniGamePage'
                 currentPokemon:setSleeping('false')
 
                 love.filesystem.write('data.lua', game:saveInFile())
@@ -576,6 +602,199 @@ function drawGameMainPage()
     elseif x >= 5 and x <= 35 and y >= love.graphics.getHeight()/2 and y <= love.graphics.getHeight()/2 + 30 then
         love.mouse.setCursor(cursor)
     elseif x >= 8 and x <= 32 and y >= love.graphics.getHeight()/2 + 50 and y <= love.graphics.getHeight()/2 + 80 then
+        love.mouse.setCursor(cursor)
+    else love.mouse.setCursor() end
+end
+
+function drawMiniGamePage()
+    local currentPokemon = game:getCurrentPokemon()
+
+    -- Background
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(gameDayBackground, x, y)
+
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.setNewFont(pixelFont, 20)
+
+    local x, y = love.mouse.getPosition()
+
+    -- Change Song
+    if songPlaying == 'gameNightSongBackground' and currentPokemon:isSleeping() == 'false' then
+        sourceAudio:stop()
+        sourceAudio = love.audio.newSource(love.sound.newSoundData(gameDaySoundBackground))
+        songPlaying = 'gameDaySongBackground'
+        sourceAudio:setLooping(true)
+        sourceAudio:play()
+    end
+
+    -- Back to Menu
+    love.graphics.print('BACK', 10, 10)
+
+    local f = love.graphics.getFont()
+    fwBack = f:getWidth('BACK')
+    fhBack = f:getHeight()
+
+    love.graphics.print('SELECT A PÓKEMON TYPE', (love.graphics.getWidth() - love.graphics.getFont():getWidth('SELECT A PÓKEMON TYPE'))/2, 70)
+
+    love.graphics.draw(love.graphics.newImage('assets/items/fire-stone.png'), (love.graphics.getWidth() - 120)/ 2 + 5, love.graphics.getHeight()/2 - 90)
+    love.graphics.draw(love.graphics.newImage('assets/items/water-stone.png'), (love.graphics.getWidth() - 120)/ 2 + 45, love.graphics.getHeight()/2 - 90)
+    love.graphics.draw(love.graphics.newImage('assets/items/leaf-stone.png'), (love.graphics.getWidth() - 120)/ 2 + 85, love.graphics.getHeight()/2 - 90)
+
+    love.graphics.print(textTypeMiniGame, (love.graphics.getWidth() - love.graphics.getFont():getWidth(textTypeMiniGame))/2, 170)
+
+    -- Function when click in anypoint
+    function love.mousepressed( z, y, button )
+        if gameState == 'miniGamePage' then
+            if y >= 10 and y <= 10 + fhBack and x >= 10 and x <= 10 + fwBack then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+
+                sourceAudio:stop()
+                sourceAudio = love.audio.newSource(love.sound.newSoundData(soundBackground))
+                sourceAudio:setLooping(true)
+                sourceAudio:play()
+                songPlaying = 'backgroundSong'
+
+                gameState = 'gameMainPage'
+            elseif y >= love.graphics.getHeight()/2 - 90 and y <= love.graphics.getHeight()/2 - 60 and x >= (love.graphics.getWidth() - 120)/ 2 + 5 and x <= (love.graphics.getWidth() - 120)/ 2 + 35 then
+                miniGameResult = 0
+                miniGameRealResult = math.random(0, 2)
+                gameState = 'resultGameMainPage'
+                textTypeMiniGame = ''
+            elseif y >= love.graphics.getHeight()/2 - 90 and y <= love.graphics.getHeight()/2 - 60 and x >= (love.graphics.getWidth() - 120)/ 2 + 45 and x <= (love.graphics.getWidth() - 120)/ 2 + 65 then
+                miniGameResult = 1
+                miniGameRealResult = math.random(0, 2)
+                gameState = 'resultGameMainPage'
+                textTypeMiniGame = ''
+            elseif y >= love.graphics.getHeight()/2 - 90 and y <= love.graphics.getHeight()/2 - 60 and x >= (love.graphics.getWidth() - 120)/ 2 + 85 and x <= (love.graphics.getWidth() - 120)/ 2 + 115 then
+                miniGameResult = 2
+                miniGameRealResult = math.random(0, 2)
+                gameState = 'resultGameMainPage'
+                textTypeMiniGame = ''
+            end
+        end
+    end
+
+    -- Change Mouse Cursor
+    if y >= 10 and y <= 10 + fhBack and x >= 10 and x <= 10 + fwBack then
+        love.mouse.setCursor(cursor)
+    elseif y >= love.graphics.getHeight()/2 - 90 and y <= love.graphics.getHeight()/2 - 60 and x >= (love.graphics.getWidth() - 120)/ 2 + 5 and x <= (love.graphics.getWidth() - 120)/ 2 + 35 then
+        love.mouse.setCursor(cursor)
+        textTypeMiniGame = 'FIRE'
+    elseif y >= love.graphics.getHeight()/2 - 90 and y <= love.graphics.getHeight()/2 - 60 and x >= (love.graphics.getWidth() - 120)/ 2 + 45 and x <= (love.graphics.getWidth() - 120)/ 2 + 65 then
+        love.mouse.setCursor(cursor)
+        textTypeMiniGame = 'WATER'
+    elseif y >= love.graphics.getHeight()/2 - 90 and y <= love.graphics.getHeight()/2 - 60 and x >= (love.graphics.getWidth() - 120)/ 2 + 85 and x <= (love.graphics.getWidth() - 120)/ 2 + 115 then
+        love.mouse.setCursor(cursor)
+        textTypeMiniGame = 'LEAF'
+    else
+        love.mouse.setCursor()
+        textTypeMiniGame = ''
+    end
+end
+
+function drawResultGameMainPage()
+    local currentPokemon = game:getCurrentPokemon()
+
+    -- Background
+    love.graphics.setColor(1, 1, 1, 1)
+    love.graphics.draw(gameDayBackground, x, y)
+
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.setNewFont(pixelFont, 20)
+
+    local x, y = love.mouse.getPosition()
+    
+    local result
+    if (miniGameResult == 0 and miniGameRealResult == 2) or (miniGameResult == 1 and miniGameRealResult == 0) or (miniGameResult == 2 and miniGameRealResult == 1) then
+        love.graphics.print('YOU WON!! CONGRATS', (love.graphics.getWidth() - love.graphics.getFont():getWidth('YOU WON!! CONGRATS'))/2, 70)
+        result = 'win'
+    elseif (miniGameResult == 0 and miniGameRealResult == 1) or (miniGameResult == 1 and miniGameRealResult == 2) or (miniGameResult == 2 and miniGameRealResult == 0) then
+        love.graphics.print('YOU LOST!! SORRY', (love.graphics.getWidth() - love.graphics.getFont():getWidth('YOU LOST!! SORRY'))/2, 70)
+        result = 'lost'
+    else
+        result = 'tie'
+        love.graphics.print('TIE!!', (love.graphics.getWidth() - love.graphics.getFont():getWidth('TIE!!'))/2, 70)
+    end
+
+    if miniGameResult == 0 then
+        love.graphics.draw(love.graphics.newImage('assets/items/fire-stone.png'), (love.graphics.getWidth() - 70)/ 2, love.graphics.getHeight()/2 - 90)
+    elseif miniGameResult == 1 then
+        love.graphics.draw(love.graphics.newImage('assets/items/water-stone.png'), (love.graphics.getWidth() - 70)/ 2, love.graphics.getHeight()/2 - 90)
+    else
+        love.graphics.draw(love.graphics.newImage('assets/items/leaf-stone.png'), (love.graphics.getWidth() - 70)/ 2, love.graphics.getHeight()/2 - 90)
+    end
+
+    if miniGameRealResult == 0 then
+        love.graphics.draw(love.graphics.newImage('assets/items/fire-stone.png'), (love.graphics.getWidth() - 80)/ 2 + 35, love.graphics.getHeight()/2 - 90)
+    elseif miniGameRealResult == 1 then
+        love.graphics.draw(love.graphics.newImage('assets/items/water-stone.png'), (love.graphics.getWidth() - 80)/ 2 + 35, love.graphics.getHeight()/2 - 90)
+    else
+        love.graphics.draw(love.graphics.newImage('assets/items/leaf-stone.png'), (love.graphics.getWidth() - 80)/ 2 + 35, love.graphics.getHeight()/2 - 90)
+    end
+
+    local f = love.graphics.getFont()
+    fwBack = f:getWidth('BACK TO POKÉMON')
+
+    -- Back to Menu
+    love.graphics.print('BACK TO POKÉMON', (love.graphics.getWidth() - fwBack)/ 2, 180)
+
+    fwPlay = f:getWidth('PLAY AGAIN')
+
+    -- Back to miniGame
+    love.graphics.print('PLAY AGAIN', (love.graphics.getWidth() - fwPlay)/ 2, 210)
+
+    -- Function when click in anypoint
+    function love.mousepressed( z, y, button )
+        if gameState == 'resultGameMainPage' then
+            if y >= 180 and y <= 200 and x >= (love.graphics.getWidth() - fwBack)/ 2 and x <= (love.graphics.getWidth() - fwBack)/ 2 + fwBack then
+                love.audio.play(love.audio.newSource(love.sound.newSoundData(actionSound)))
+
+                sourceAudio:stop()
+                sourceAudio = love.audio.newSource(love.sound.newSoundData(soundBackground))
+                sourceAudio:setLooping(true)
+                sourceAudio:play()
+                songPlaying = 'backgroundSong'
+
+                if result == 'win' then
+                    currentPokemon:wonGame()
+                    currentPokemon:updateStats()
+                    game:saveInFile()
+                elseif result == 'tie' then
+                    currentPokemon:tieGame()
+                    currentPokemon:updateStats()
+                    game:saveInFile()
+                else
+                    currentPokemon:lostGame()
+                    currentPokemon:updateStats()
+                    game:saveInFile()
+                end
+
+                gameState = 'gameMainPage'
+            elseif y >= 210 and y <= 230 and x >= (love.graphics.getWidth() - fwPlay)/ 2 and x <= (love.graphics.getWidth() - fwPlay)/ 2 + fwPlay then
+
+                if result == 'win' then
+                    currentPokemon:wonGame()
+                    currentPokemon:updateStats()
+                    game:saveInFile()
+                elseif result == 'tie' then
+                    currentPokemon:tieGame()
+                    currentPokemon:updateStats()
+                    game:saveInFile()
+                else
+                    currentPokemon:lostGame()
+                    currentPokemon:updateStats()
+                    game:saveInFile()
+                end
+
+                gameState = 'miniGamePage'
+            end
+        end
+    end
+
+    -- Change Mouse Cursor
+    if y >= 180 and y <= 200 and x >= (love.graphics.getWidth() - fwBack)/ 2 and x <= (love.graphics.getWidth() - fwBack)/ 2 + fwBack then
+        love.mouse.setCursor(cursor)
+    elseif y >= 210 and y <= 230 and x >= (love.graphics.getWidth() - fwPlay)/ 2 and x <= (love.graphics.getWidth() - fwPlay)/ 2 + fwPlay then
         love.mouse.setCursor(cursor)
     else love.mouse.setCursor() end
 end

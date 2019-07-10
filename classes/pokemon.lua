@@ -33,6 +33,34 @@ function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, he
         pokemon:setDirt(pokemon.dirt - 10)
     end
 
+    function pokemon:wonGame()
+        local food = math.random(1, 3)
+        local medicine = 3 - food
+
+        pokemon:addFoods(food)
+        pokemon:addMedicines(medicine)
+        pokemon:setHappiness(pokemon.happiness + 15)
+        pokemon:setEnergy(pokemon.energy - 6)
+        pokemon:setHunger(pokemon.hunger + 5)
+    end
+
+    function pokemon:tieGame()
+        local food = math.random(0, 1)
+        local medicine = 1 - food
+
+        pokemon:addFoods(food)
+        pokemon:addMedicines(medicine)
+        pokemon:setHappiness(pokemon.happiness + 8)
+        pokemon:setEnergy(pokemon.energy - 6)
+        pokemon:setHunger(pokemon.hunger + 5)
+    end
+
+    function pokemon:lostGame()
+        pokemon:setHappiness(pokemon.happiness - 8)
+        pokemon:setEnergy(pokemon.energy - 6)
+        pokemon:setHunger(pokemon.hunger + 5)
+    end
+
     function pokemon:setImage( image )
         pokemon.image = image
     end
@@ -91,6 +119,14 @@ function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, he
         pokemon.sleeping = sleeping
     end
 
+    function pokemon:addFoods( foods )
+        pokemon.foods = pokemon.foods + foods
+    end
+
+    function pokemon:addMedicines( medicines )
+        pokemon.medicines = pokemon.medicines + medicines
+    end
+
     function pokemon:updateStats()
         local now = os.time()
         local deltaTimeSeconds = now - pokemon.lastLogTime
@@ -129,6 +165,14 @@ function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, he
 
     function pokemon:saveInFile()
         return pokemon.name .. ';' .. pokemon.image .. ';' .. pokemon.createdAt .. ';' .. pokemon.lastLogTime .. ';' .. pokemon.happiness .. ';' .. pokemon.energy .. ';' .. pokemon.healthiness .. ';' .. pokemon.dirt .. ';' .. pokemon.hunger .. ';' .. string.format('%s', tostring(pokemon.sleeping)) .. ';' .. pokemon.foods .. ';' .. pokemon.medicines .. ';'
+    end
+
+    function pokemon:isDead()
+        if pokemon.hunger == 100 and pokemon.healthiness == 0 and pokemon.happiness == 0 then
+            return true
+        else
+            return false
+        end
     end
 
     function pokemon:isSleeping()
@@ -173,6 +217,22 @@ function new( onSelf, name, image, createdAt, lastLogTime, happiness, energy, he
         else
             return false
         end
+    end
+
+    function pokemon:reset()
+        pokemon.createdAt = os.time()
+        pokemon.lastLogTime = os.time()
+
+        pokemon.happiness = 100
+        pokemon.energy = 100
+        pokemon.healthiness = 100
+        pokemon.dirt = 0
+        pokemon.hunger = 0
+        
+        pokemon.foods = 20
+        pokemon.medicines = 20
+
+        pokemon.sleeping = false
     end
 
     return pokemon
